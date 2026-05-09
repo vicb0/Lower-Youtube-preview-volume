@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Lower Youtube preview volume
-// @namespace    http://tampermonkey.net/
+// @namespace    https://greasyfork.org/en/scripts/577264-lower-youtube-preview-volume
 // @version      2026-05-09
 // @description  Youtube previews are too goddamn loud and the volume is not settable, so I fixed it.
 // @author       Vicbo
