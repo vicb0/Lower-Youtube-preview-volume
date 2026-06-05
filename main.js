@@ -10,17 +10,10 @@
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
 // ==/UserScript==
+// Github Repo: https://github.com/vicb0/Lower-Youtube-preview-volume
 
 (function() {
     'use strict';
-
-    const isHomeScreen = () => {
-        return location.hostname === "www.youtube.com" && location.pathname === "/";
-    }
-
-    const isPreviewVideo = videoElement => {
-        return !!videoElement.closest("ytd-video-preview");
-    };
 
     const DEFAULT_PREVIEW_VOLUME = 0.25;
 
@@ -55,6 +48,38 @@
         configureVolume
     );
 
+    const DEFAULT_FORCE_UNMUTE = true;
+
+    const getForceUnmute = () => {
+        return GM_getValue(
+            "forceUnmute",
+            DEFAULT_FORCE_UNMUTE
+        );
+    }
+
+    const configureForceUnmute = async () => {
+        const current = getForceUnmute();
+
+        const toggle = confirm(`${current ? "DISABLE" : "ENABLE"} force unmute previews?`);
+
+        if (toggle) {
+            await GM_setValue("forceUnmute", !current);
+        }
+    }
+
+    GM_registerMenuCommand(
+        "Toggle on/off force unmute previews",
+        configureForceUnmute
+    );
+
+    const isHomeScreen = () => {
+        return location.hostname === "www.youtube.com" && location.pathname === "/";
+    }
+
+    const isPreviewVideo = videoElement => {
+        return !!videoElement.closest("ytd-video-preview");
+    };
+
     const volumeDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "volume");
 
     Object.defineProperty(HTMLMediaElement.prototype, "volume",
@@ -69,6 +94,25 @@
                 }
 
                 return volumeDescriptor.set.call(this, value);
+            }
+        }
+    );
+
+    // Suggested by TWOK: https://greasyfork.org/en/users/6518-twok
+    const mutedDescriptor = Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype, "muted");
+
+    Object.defineProperty(HTMLMediaElement.prototype, "muted",
+        {
+            get() {
+                return mutedDescriptor.get.call(this);
+            },
+
+            set(value) {
+                if (getForceUnmute() && isHomeScreen() && isPreviewVideo(this)) {
+                    value = false;
+                }
+
+                return mutedDescriptor.set.call(this, value);
             }
         }
     );
